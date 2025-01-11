@@ -37,9 +37,11 @@ Please provide answers to these questions using markdown notation and place them
 3. Please provide a link to the repository you are using for this class.
 
 (https://gitlab.com/18190442/cs283)
+
 4. Briefly describe what you want to get out of this class.
 
 I would like to understand what I need to know in order to be a successful game developer. As of right now, I don't know if there's anything in this class related to that, however if I find something to be important, I will know I am on the right path. Lastly, I am looking to gain the necessary knowledge to back up the accredidation of a Computer Science degree.
+
 5. Briefly describe any concerns you might be having with being successful in this class (if any).
 
 I am worried that I will be completely lost on one of the assignments and/or that I will fall behind.
