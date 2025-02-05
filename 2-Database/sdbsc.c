@@ -130,17 +130,24 @@ int add_student(int fd, int id, char *fname, char *lname, int gpa){
 
     lseek(fd, STUDENT_RECORD_SIZE * id, SEEK_SET);
 
-    if (write(fd, &id, sizeof(id)) < 1) {
+    if (write(fd, &id, sizeof(int)) < 1) {
         printf(M_ERR_DB_WRITE);
         return ERR_DB_FILE;
     }
-    if (write(fd, fname, sizeof(*fname)) < 1) {
-        printf(M_ERR_DB_WRITE);
-        return ERR_DB_FILE;
+
+    lseek(fd, STUDENT_RECORD_SIZE * id + sizeof(int), SEEK_SET);
+
+    for (int i = 0; i < 24; i++) {
+        if (write(fd, fname+i, sizeof(*fname)) < 1) {
+            printf(M_ERR_DB_WRITE);
+            return ERR_DB_FILE;
+        }
     }
-    if (write(fd, lname, sizeof(*lname)) < 1) {
-        printf(M_ERR_DB_WRITE);
-        return ERR_DB_FILE;
+    for (int i = 0; i < 32; i++) {
+        if (write(fd, lname+i, sizeof(*lname)) < 1) {
+            printf(M_ERR_DB_WRITE);
+            return ERR_DB_FILE;
+        }
     }
     if (write(fd, &gpa, sizeof(gpa)) < 1) {
         printf(M_ERR_DB_WRITE);
@@ -190,7 +197,9 @@ int del_student(int fd, int id){
         return ERR_DB_FILE;
     }
 
-    if (write(fd, &EMPTY_STUDENT_RECORD, sizeof(student_t)) < 1) {
+    lseek(fd, id * STUDENT_RECORD_SIZE, SEEK_SET);
+
+    if (write(fd, &(EMPTY_STUDENT_RECORD), STUDENT_RECORD_SIZE) < 1) {
         printf(M_ERR_DB_WRITE);
         return ERR_DB_FILE;
     }
@@ -224,24 +233,25 @@ int del_student(int fd, int id){
  *            
  */
 int count_db_records(int fd){
-    off_t markerInFile = lseek(fd, 64, SEEK_SET);
+    off_t markerInFile = lseek(fd, STUDENT_RECORD_SIZE, SEEK_SET);
     if (markerInFile == -1) {
         printf(M_ERR_DB_READ);
         return ERR_DB_FILE;
     }
 
-    student_t* readFromFile = NULL;
+    student_t* readFromFile = malloc(STUDENT_RECORD_SIZE);
     int counter = 0;
 
     int readline = read(fd, readFromFile, 64);
 
     while (readline > 0) {
-        counter++;
-        if (memcmp(readFromFile, &(EMPTY_STUDENT_RECORD), 64) != 0) {
+        if (memcmp(readFromFile, &(EMPTY_STUDENT_RECORD), STUDENT_RECORD_SIZE) > 0) {
             counter++;
         }
-        readline = read(fd, readFromFile, 64);
+        readline = read(fd, readFromFile, STUDENT_RECORD_SIZE);
     }
+
+    free(readFromFile);
 
     if (readline < 0) {
         printf(M_ERR_DB_READ);
@@ -253,7 +263,6 @@ int count_db_records(int fd){
     } else {
         printf(M_DB_RECORD_CNT, counter);
     }
-    printf("%d\n", counter);
     return counter;
 }
 
@@ -291,30 +300,33 @@ int count_db_records(int fd){
  *            
  */
 int print_db(int fd){
-    off_t markerInFile = lseek(fd, 64, SEEK_SET);
+    off_t markerInFile = lseek(fd, STUDENT_RECORD_SIZE, SEEK_SET);
     if (markerInFile == -1) {
         printf(M_ERR_DB_READ);
         return ERR_DB_FILE;
     }
 
-    student_t* readFromFile = NULL;
+    student_t* readFromFile = malloc(STUDENT_RECORD_SIZE);
 
     bool headerUp = false;
 
-    while (read(fd, readFromFile, 64) > 0) {
-        if (memcmp(readFromFile, &EMPTY_STUDENT_RECORD, 64) != 0) {
+    while (read(fd, readFromFile, STUDENT_RECORD_SIZE) > 0) {
+        if (memcmp(readFromFile, &EMPTY_STUDENT_RECORD, STUDENT_RECORD_SIZE) != 0) {
             float intToFloatGPA = (*readFromFile).gpa / 100.0;
-            printf(STUDENT_PRINT_FMT_STRING, readFromFile->id, readFromFile->fname, readFromFile->lname, intToFloatGPA);
+            
             if (headerUp == false) {
                 printf(STUDENT_PRINT_HDR_STRING, "ID", "FIRST NAME", "LAST_NAME", "GPA");
                 headerUp = true;
             }
+            printf(STUDENT_PRINT_FMT_STRING, readFromFile->id, readFromFile->fname, readFromFile->lname, intToFloatGPA);
         }
     }
 
     if (headerUp == false) {
         printf(M_DB_EMPTY);
     }
+
+    free(readFromFile);
 
     return NO_ERROR;
 }
