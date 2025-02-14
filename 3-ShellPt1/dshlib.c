@@ -36,15 +36,20 @@ int build_cmd_list(char *cmd_line, command_list_t *clist)
 {
     //Move the starting index to be the first index that doesn't have a space
     int startOfCommandLine = 0;
-    while (*(cmd_line + startOfCommandLine) == ' ') {
+    while (*(cmd_line + startOfCommandLine) == SPACE_CHAR) {
         startOfCommandLine++;
+    }
+
+    if (*(cmd_line + startOfCommandLine) == '\0') {
+        (*clist).num = 0;
+        return OK;
     }
 
     //Count the number of pipes/commands
     int commandLinePointerIndex = startOfCommandLine;
     int commandCounter = 1;
     while (*(cmd_line + commandLinePointerIndex) != '\0') {
-        if (*(cmd_line + commandLinePointerIndex) == '|') {
+        if (*(cmd_line + commandLinePointerIndex) == PIPE_CHAR) {
             commandCounter++;
         }
         if (commandCounter > CMD_MAX) {
@@ -59,7 +64,7 @@ int build_cmd_list(char *cmd_line, command_list_t *clist)
     for (int i = 0; i < commandCounter; i++) {
         int thisCommandExecPointerIndex = 0;
         int thisCommandArgPointerIndex = 0;
-        while (*(cmd_line + commandLinePointerIndex) != '|' && *(cmd_line + commandLinePointerIndex) != '\0' && *(cmd_line + commandLinePointerIndex) != ' ') {
+        while (*(cmd_line + commandLinePointerIndex) != PIPE_CHAR && *(cmd_line + commandLinePointerIndex) != '\0' && *(cmd_line + commandLinePointerIndex) != SPACE_CHAR) {
             ((*clist).commands[i]).exe[thisCommandExecPointerIndex] = *(cmd_line + commandLinePointerIndex);
             thisCommandExecPointerIndex++;
             commandLinePointerIndex++;
@@ -69,11 +74,11 @@ int build_cmd_list(char *cmd_line, command_list_t *clist)
         }
 
         ((*clist).commands[i]).exe[thisCommandExecPointerIndex] = '\0';
-        while (*(cmd_line + commandLinePointerIndex) == ' ') {
+        while (*(cmd_line + commandLinePointerIndex) == SPACE_CHAR) {
             commandLinePointerIndex++;
         }
 
-        while (*(cmd_line + commandLinePointerIndex) != '|' && *(cmd_line + commandLinePointerIndex) != '\0') {
+        while (*(cmd_line + commandLinePointerIndex) != PIPE_CHAR && *(cmd_line + commandLinePointerIndex) != '\0') {
             ((*clist).commands[i]).args[thisCommandArgPointerIndex] = *(cmd_line + commandLinePointerIndex);
             thisCommandArgPointerIndex++;
             commandLinePointerIndex++;
@@ -83,12 +88,12 @@ int build_cmd_list(char *cmd_line, command_list_t *clist)
         }
 
         ((*clist).commands[i]).args[thisCommandArgPointerIndex] = '\0';
-        while (*(cmd_line + commandLinePointerIndex) == ' ') {
+        while (*(cmd_line + commandLinePointerIndex) == SPACE_CHAR) {
             commandLinePointerIndex++;
         }
-        if (*(cmd_line + commandLinePointerIndex) == '|') {
+        if (*(cmd_line + commandLinePointerIndex) == PIPE_CHAR) {
             commandLinePointerIndex++;
-            while (*(cmd_line + commandLinePointerIndex) == ' ') {
+            while (*(cmd_line + commandLinePointerIndex) == SPACE_CHAR) {
                 commandLinePointerIndex++;
             }
             continue;
